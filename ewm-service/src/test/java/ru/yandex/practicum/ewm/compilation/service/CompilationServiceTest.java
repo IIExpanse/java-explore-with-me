@@ -69,6 +69,14 @@ public class CompilationServiceTest {
         EventFullDto eventFullDto2 = eventService.addEvent(makeNewEventRequest(categoryDto.getId()), userDto1.getId());
         EventFullDto eventFullDto3 = eventService.addEvent(makeNewEventRequest(categoryDto.getId()), userDto1.getId());
 
+        compilationService.addCompilation(makeNewCompilation(Set.of(
+                eventFullDto1.getId(),
+                eventFullDto2.getId(),
+                eventFullDto3.getId())));
+        compilationService.addCompilation(makeNewCompilation(Set.of(
+                eventFullDto1.getId(),
+                eventFullDto2.getId())));
+
         assertEquals(2, compilationService.getCompilations(false, 0, 10).size());
     }
 

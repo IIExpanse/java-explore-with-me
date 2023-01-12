@@ -4,18 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.ewm.user.dto.UserDto;
 import ru.yandex.practicum.ewm.user.exception.DuplicateEmailException;
 import ru.yandex.practicum.ewm.user.exception.UserNotFoundException;
-import ru.yandex.practicum.ewm.user.dto.UserDto;
 import ru.yandex.practicum.ewm.user.mapper.UserMapper;
 import ru.yandex.practicum.ewm.user.model.User;
 import ru.yandex.practicum.ewm.user.repository.UserRepository;
 import ru.yandex.practicum.ewm.user.service.UserService;
 
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

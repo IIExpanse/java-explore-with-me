@@ -1,7 +1,6 @@
 package ru.yandex.practicum.ewm.user.service;
 
 import ru.yandex.practicum.ewm.user.dto.UserDto;
-import ru.yandex.practicum.ewm.user.model.User;
 
 import java.util.Collection;
 

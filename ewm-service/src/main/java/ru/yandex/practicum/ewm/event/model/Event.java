@@ -57,11 +57,11 @@ public class Event {
     private String title;
     @OneToMany(mappedBy = "event")
     @ToString.Exclude
-    Set<ParticipationRequest> requests;
+    private Set<ParticipationRequest> requests;
     @ManyToMany
     @JoinTable(name = "events_compilations",
             joinColumns = @JoinColumn(name = "ref_event", referencedColumnName = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "ref_compilation", referencedColumnName = "compilation_id"))
     @ToString.Exclude
-    Set<Compilation> compilations;
+    private Set<Compilation> compilations;
 }

@@ -3,6 +3,7 @@ package ru.yandex.practicum.ewm.request.service;
 import ru.yandex.practicum.ewm.request.dto.ParticipationRequestDto;
 
 import java.util.Collection;
+import java.util.Map;
 
 public interface RequestService {
 
@@ -13,6 +14,8 @@ public interface RequestService {
     Collection<ParticipationRequestDto> getRequestsByEventOwner(long ownerId, long eventId);
 
     int getConfirmedRequestsCount(long eventId);
+
+    Map<Long, Integer> getConfirmedRequestsForCollection(Collection<Long> ids);
 
     ParticipationRequestDto cancelRequest(long userId, long requestId);
 

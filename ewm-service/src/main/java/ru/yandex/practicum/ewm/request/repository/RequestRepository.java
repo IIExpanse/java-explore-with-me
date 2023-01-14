@@ -20,7 +20,10 @@ public interface RequestRepository extends JpaRepository<ParticipationRequest, L
 
     int countAllByEventIdAndStatus(long eventId, RequestStatus status);
 
-    Collection<ParticipationRequest> findAllByEventIdAndStatus(long eventId, RequestStatus status);
+    @Query("SELECT r.event.id FROM ParticipationRequest r " +
+            "WHERE r.event.id IN ?1 " +
+            "AND r.status = ?2")
+    Collection<Long> getAllEventIdsFromConfirmedRequests(Collection<Long> eventIds, RequestStatus status);
 
     @Query("UPDATE ParticipationRequest r " +
             "SET r.status = 'REJECTED'" +

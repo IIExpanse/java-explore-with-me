@@ -12,7 +12,7 @@ import ru.yandex.practicum.stats.repository.StatsRepository;
 import ru.yandex.practicum.stats.service.StatsService;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +27,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public EndpointHitDto saveHit(EndpointHitDto endpointHitDto) {
+        endpointHitDto.setUri(endpointHitDto.getUri().toLowerCase());
         EndpointHit endpointHit = repository.save(mapper.mapToNewModel(endpointHitDto));
 
         log.debug("Сохранено посещение эндпоинта '{}'.", endpointHit.getUri());
@@ -39,22 +40,36 @@ public class StatsServiceImpl implements StatsService {
             LocalDateTime end,
             Collection<String> uris, boolean unique) {
 
-        System.out.println(uris);
-        log.trace("Запрошена статистика посещений по {} адресам", uris.size());
+        Map<String, Integer> hitsMap = new HashMap<>();
+        uris = uris.stream()
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+        uris.forEach(uri -> hitsMap.put(uri, 0));
+
         if (unique) {
-            return uris.stream()
-                    .map(uri -> ViewStats.builder()
-                            .app(appName)
-                            .uri(uri)
-                            .hits(repository.countUniqueHits(start, end, uri))
-                            .build())
-                    .collect(Collectors.toList());
+            Collection<EndpointHit> hits = repository.getAllHits(start, end, uris);
+
+            Map<String, Set<String>> uniqueIpsPerUriMap = new HashMap<>();
+            uris.forEach(uri -> uniqueIpsPerUriMap.put(uri, new HashSet<>()));
+
+            for (EndpointHit hit : hits) {
+                String uri = hit.getUri();
+
+                if (uniqueIpsPerUriMap.get(uri).add(hit.getIp())) {
+                    hitsMap.put(uri, hitsMap.get(uri) + 1);
+                }
+            }
+
+        } else {
+            repository.getAllUris(start, end, uris).forEach(uri -> hitsMap.put(uri, hitsMap.get(uri) + 1));
         }
+
+        log.trace("Запрошена статистика посещений по {} адресам", uris.size());
         return uris.stream()
                 .map(uri -> ViewStats.builder()
                         .app(appName)
                         .uri(uri)
-                        .hits(repository.countAllByTimeBetweenAndUriLike(start, end, uri))
+                        .hits(hitsMap.get(uri))
                         .build())
                 .collect(Collectors.toList());
     }

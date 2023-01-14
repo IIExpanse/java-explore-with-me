@@ -6,19 +6,20 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.stats.model.EndpointHit;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Repository
 public interface StatsRepository extends JpaRepository<EndpointHit, Long> {
 
-    @Query("SELECT COUNT(e.ip) FROM EndpointHit e " +
+    @Query("SELECT e.uri FROM EndpointHit e " +
             "WHERE ?1 <= e.time " +
             "AND e.time <= ?2 " +
-            "AND LOWER(e.uri) LIKE CONCAT(LOWER(?3), '%') ")
-    int countAllByTimeBetweenAndUriLike(LocalDateTime start, LocalDateTime end, String uri);
+            "AND e.uri IN ?3")
+    Collection<String> getAllUris(LocalDateTime start, LocalDateTime end, Collection<String> uris);
 
-    @Query("SELECT COUNT(DISTINCT(e.ip)) FROM EndpointHit e " +
+    @Query("SELECT e FROM EndpointHit e " +
             "WHERE ?1 <= e.time " +
             "AND e.time <= ?2 " +
-            "AND LOWER(e.uri) LIKE CONCAT(LOWER(?3), '%') ")
-    int countUniqueHits(LocalDateTime start, LocalDateTime end, String uri);
+            "AND e.uri IN ?3")
+    Collection<EndpointHit> getAllHits(LocalDateTime start, LocalDateTime end, Collection<String> uris);
 }

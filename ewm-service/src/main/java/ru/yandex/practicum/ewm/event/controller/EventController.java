@@ -2,7 +2,7 @@ package ru.yandex.practicum.ewm.event.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.ewm.event.dto.*;
 import ru.yandex.practicum.ewm.event.model.EventSortType;
@@ -17,41 +17,42 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@ResponseStatus(HttpStatus.OK)
 public class EventController {
 
     private final EventService service;
 
     @PostMapping(path = "/users/{userId}/events")
-    public ResponseEntity<EventFullDto> addEvent(
+    public EventFullDto addEvent(
             @RequestBody @Valid NewEventDto newEventDto,
             @PathVariable Long userId) {
-        return ResponseEntity.ok(service.addEvent(newEventDto, userId));
+        return service.addEvent(newEventDto, userId);
     }
 
     @GetMapping(path = "/events/{id}")
-    public ResponseEntity<EventFullDto> getEvent(
+    public EventFullDto getEvent(
             @PathVariable Long id,
             @Autowired HttpServletRequest servletRequest) {
-        return ResponseEntity.ok(service.getEvent(id, servletRequest.getRemoteAddr()));
+        return service.getEvent(id, servletRequest.getRemoteAddr());
     }
 
     @GetMapping(path = "/users/{userId}/events/{eventId}")
-    public ResponseEntity<EventFullDto> getEventByInitiator(
+    public EventFullDto getEventByInitiator(
             @PathVariable Long userId,
             @PathVariable Long eventId) {
-        return ResponseEntity.ok(service.getEventByInitiator(userId, eventId));
+        return service.getEventByInitiator(userId, eventId);
     }
 
     @GetMapping(path = "/users/{userId}/events")
-    public ResponseEntity<Collection<EventShortDto>> getEventsByInitiator(
+    public Collection<EventShortDto> getEventsByInitiator(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size) {
-        return ResponseEntity.ok(service.getEventsByInitiator(userId, from, size));
+        return service.getEventsByInitiator(userId, from, size);
     }
 
     @GetMapping(path = "/events")
-    public ResponseEntity<Collection<EventShortDto>> getFilteredEventsPublic(
+    public Collection<EventShortDto> getFilteredEventsPublic(
             @RequestParam(required = false) String text,
             @RequestParam(required = false) List<Long> categories,
             @RequestParam(required = false) Boolean paid,
@@ -64,7 +65,7 @@ public class EventController {
             @Autowired HttpServletRequest servletRequest
     ) {
 
-        return ResponseEntity.ok(service.getFilteredEventsPublic(
+        return service.getFilteredEventsPublic(
                 text,
                 categories,
                 paid,
@@ -75,21 +76,21 @@ public class EventController {
                 from,
                 size,
                 servletRequest.getRemoteAddr()
-        ));
+        );
     }
 
     @GetMapping(path = "/admin/events")
-    public ResponseEntity<Collection<EventFullDto>> getFilteredEventsInternal(
+    public Collection<EventFullDto> getFilteredEventsInternal(
             @RequestParam(required = false) List<Long> users,
-            @RequestParam(required = false)  List<EventState> states,
+            @RequestParam(required = false) List<EventState> states,
             @RequestParam(required = false) List<Long> categories,
-            @RequestParam(required = false)  LocalDateTime rangeStart,
-            @RequestParam(required = false)  LocalDateTime rangeEnd,
+            @RequestParam(required = false) LocalDateTime rangeStart,
+            @RequestParam(required = false) LocalDateTime rangeEnd,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
 
-        return ResponseEntity.ok(service.getFilteredEventsInternal(
+        return service.getFilteredEventsInternal(
                 users,
                 states,
                 categories,
@@ -97,39 +98,39 @@ public class EventController {
                 rangeEnd,
                 from,
                 size
-        ));
+        );
     }
 
     @PatchMapping(path = "/users/{userId}/events")
-    public ResponseEntity<EventFullDto> updateEvent(
+    public EventFullDto updateEvent(
             @RequestBody @Valid UpdateEventRequest request,
             @PathVariable Long userId) {
-        return ResponseEntity.ok(service.updateEvent(request, userId));
+        return service.updateEvent(request, userId);
     }
 
     @PutMapping(path = "/admin/events/{eventId}")
-    public ResponseEntity<EventFullDto> updateEventAdmin(
+    public EventFullDto updateEventAdmin(
             @RequestBody @Valid AdminUpdateEventRequest request,
             @PathVariable Long eventId) {
-        return ResponseEntity.ok(service.updateEventAdmin(request, eventId));
+        return service.updateEventAdmin(request, eventId);
     }
 
     @PatchMapping(path = "/users/{userId}/events/{eventId}")
-    public ResponseEntity<EventFullDto> cancelEvent(
+    public EventFullDto cancelEvent(
             @PathVariable Long userId,
             @PathVariable Long eventId) {
-        return ResponseEntity.ok(service.cancelEvent(eventId, userId));
+        return service.cancelEvent(eventId, userId);
     }
 
     @PatchMapping(path = "/admin/events/{eventId}/publish")
-    public ResponseEntity<EventFullDto> publishEvent(
+    public EventFullDto publishEvent(
             @PathVariable Long eventId) {
-        return ResponseEntity.ok(service.publishEvent(eventId));
+        return service.publishEvent(eventId);
     }
 
     @PatchMapping(path = "/admin/events/{eventId}/reject")
-    public ResponseEntity<EventFullDto> rejectEvent(
+    public EventFullDto rejectEvent(
             @PathVariable Long eventId) {
-        return ResponseEntity.ok(service.rejectEvent(eventId));
+        return service.rejectEvent(eventId);
     }
 }

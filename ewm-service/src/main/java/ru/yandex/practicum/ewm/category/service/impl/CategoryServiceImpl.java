@@ -8,16 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.ewm.category.dto.CategoryDto;
 import ru.yandex.practicum.ewm.category.dto.NewCategoryDto;
 import ru.yandex.practicum.ewm.category.exception.CantDeleteUsedCategoryException;
+import ru.yandex.practicum.ewm.category.exception.CategoryNameAlreadyExistsException;
+import ru.yandex.practicum.ewm.category.exception.CategoryNotFoundException;
 import ru.yandex.practicum.ewm.category.mapper.CategoryMapper;
 import ru.yandex.practicum.ewm.category.model.Category;
 import ru.yandex.practicum.ewm.category.repository.CategoryRepository;
 import ru.yandex.practicum.ewm.category.service.CategoryService;
-import ru.yandex.practicum.ewm.category.exception.CategoryNameAlreadyExistsException;
-import ru.yandex.practicum.ewm.category.exception.CategoryNotFoundException;
 import ru.yandex.practicum.ewm.event.repository.EventRepository;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,14 +43,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto getCategory(long id) {
-        Optional<Category> categoryOptional = categoryRepository.findById(id);
-        Category category;
-
-        if (categoryOptional.isEmpty()) {
-            throw new CategoryNotFoundException(
-                    String.format("Ошибка при получении категории: категория с id=%d не найдена.", id));
-        }
-        category = categoryOptional.get();
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new CategoryNotFoundException(
+                String.format("Ошибка при получении категории: категория с id=%d не найдена.", id)));
 
         log.trace("Запрошена категория с id={}.", id);
         return mapper.mapToDto(category);
@@ -75,9 +68,9 @@ public class CategoryServiceImpl implements CategoryService {
                             "Ошибка при обновлении категории: категория с id=%d не найдена.",
                             categoryDto.getId()));
 
-        } else if (categoryRepository.existsCategoryByName(categoryDto.getName())) {
+        } else if (categoryRepository.existsCategoryByNameAndIdNot(categoryDto.getName(), categoryDto.getId())) {
             throw new CategoryNameAlreadyExistsException(
-                    String.format("Ошибка при создании категории: имя '%s' уже занято.", categoryDto.getName()));
+                    String.format("Ошибка при обновлении категории: имя '%s' уже занято.", categoryDto.getName()));
         }
         Category category = categoryRepository.save(mapper.mapToModel(categoryDto));
 

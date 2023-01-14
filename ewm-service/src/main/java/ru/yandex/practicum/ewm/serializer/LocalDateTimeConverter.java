@@ -1,6 +1,5 @@
 package ru.yandex.practicum.ewm.serializer;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +9,6 @@ import java.time.format.DateTimeFormatter;
 import static ru.yandex.practicum.ewm.serializer.LocalDateTimeCompositeSerializer.DATE_TIME_FORMAT;
 
 @Component
-@RequiredArgsConstructor
 public class LocalDateTimeConverter implements Converter<String, LocalDateTime> {
 
     @Override

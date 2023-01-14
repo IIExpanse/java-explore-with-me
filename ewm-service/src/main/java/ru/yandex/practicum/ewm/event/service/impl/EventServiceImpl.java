@@ -25,7 +25,7 @@ import ru.yandex.practicum.ewm.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,14 +76,8 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event getEventModel(long eventId) {
-        Optional<Event> eventOptional = eventRepository.findById(eventId);
-
-        if (eventOptional.isEmpty()) {
-            throw new EventNotFoundException(
-                    String.format("Ошибка при получении события: событие с id=%d не найдено.", eventId));
-        }
-
-        return eventOptional.get();
+        return eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(
+                String.format("Ошибка при получении события: событие с id=%d не найдено.", eventId)));
     }
 
     @Override
@@ -94,7 +88,7 @@ public class EventServiceImpl implements EventService {
         if (userId != event.getInitiator().getId()) {
             throw new WrongUserRequestingOwnerEventException(
                     String.format("Ошибка при получении события с id=%d по владельцу с id=%d: " +
-                    "пользователь не является инициатором события.", eventId, userId));
+                            "пользователь не является инициатором события.", eventId, userId));
         }
 
         log.trace("Запрошено событие с id={}", eventId);
@@ -107,13 +101,21 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Collection<EventShortDto> getEventsByInitiator(long userId, int from, int size) {
+        Collection<Event> events = eventRepository.findAllByInitiatorId(userId, Pageable.ofSize(size)).stream()
+                .skip(from)
+                .collect(Collectors.toSet());
+        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+
+        Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
+
         log.trace("Запрошена подборка событий инициатора с id={}", userId);
-        return eventRepository.findAllByInitiatorId(userId, Pageable.ofSize(size)).stream()
+        return events.stream()
                 .skip(from)
                 .map(event -> mapper.mapToShortDto(
                         event,
-                        requestService.getConfirmedRequestsCount(event.getId()),
-                        statsService.getViewsForEvent(event.getId())))
+                        requestsCountMap.get(event.getId()),
+                        viewsCountMap.get(event.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -130,18 +132,24 @@ public class EventServiceImpl implements EventService {
             int size,
             String ip) {
 
-        Stream<EventShortDto> shortDtoStream = eventRepository.getFilteredEventsPublic(
-                        text,
-                        categories,
-                        paid,
-                        rangeStart,
-                        rangeEnd,
-                        onlyAvailable,
-                        size).stream()
+        Collection<Event> events = eventRepository.getFilteredEventsPublic(
+                text,
+                categories,
+                paid,
+                rangeStart,
+                rangeEnd,
+                onlyAvailable,
+                size);
+        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+
+        Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
+
+        Stream<EventShortDto> shortDtoStream = events.stream()
                 .map(event -> mapper.mapToShortDto(
                         event,
-                        requestService.getConfirmedRequestsCount(event.getId()),
-                        statsService.getViewsForEvent(event.getId())));
+                        requestsCountMap.get(event.getId()),
+                        viewsCountMap.get(event.getId())));
 
         Collection<EventShortDto> shortDtos;
 
@@ -165,18 +173,27 @@ public class EventServiceImpl implements EventService {
             int from,
             int size) {
 
-        log.trace("Запрошена подборка событий со внутреннего эндпоинта.");
-        return eventRepository.getFilteredEventsInternal(
+        Collection<Event> events = eventRepository.getFilteredEventsInternal(
                         users,
                         states,
                         categories,
                         rangeStart,
                         rangeEnd,
                         size).stream()
-                .skip(from).map(event -> mapper.mapToFullDto(
+                .skip(from)
+                .collect(Collectors.toSet());
+
+        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+
+        Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
+
+        log.trace("Запрошена подборка событий со внутреннего эндпоинта.");
+        return events.stream()
+                .map(event -> mapper.mapToFullDto(
                         event,
-                        requestService.getConfirmedRequestsCount(event.getId()),
-                        statsService.getViewsForEvent(event.getId()),
+                        requestsCountMap.get(event.getId()),
+                        viewsCountMap.get(event.getId()),
                         new LocationDto(event.getLat(), event.getLon())))
                 .collect(Collectors.toList());
     }
@@ -298,25 +315,12 @@ public class EventServiceImpl implements EventService {
     }
 
     private User getUserOrThrow(long userId, String context) {
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isEmpty()) {
-            String message = String.format("Ошибка при операции '%s': ", context) +
-                    String.format("пользователь с id=%d не найден.", userId);
-
-            throw new UserNotFoundException(message);
-        }
-
-        return userOptional.get();
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(
+                String.format("Ошибка при операции '%s': пользователь с id=%d не найден.", context, userId)));
     }
 
     private Category getCategoryOrThrow(Long catId, String context) {
-        Optional<Category> categoryOptional = categoryRepository.findById(catId);
-
-        if (categoryOptional.isEmpty()) {
-            throw new CategoryNotFoundException(
-                    String.format("Ошибка при операции %s: категория не найдена.", context));
-        }
-        return categoryOptional.get();
+        return categoryRepository.findById(catId).orElseThrow(() -> new CategoryNotFoundException(
+                String.format("Ошибка при операции %s: категория не найдена.", context)));
     }
 }

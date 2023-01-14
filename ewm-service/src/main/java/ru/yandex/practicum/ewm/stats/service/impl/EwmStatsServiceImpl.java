@@ -4,10 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.ewm.stats.client.StatsClient;
 import ru.yandex.practicum.ewm.stats.dto.EndpointHitDto;
+import ru.yandex.practicum.ewm.stats.dto.ViewStats;
 import ru.yandex.practicum.ewm.stats.service.EwmStatsService;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,5 +45,28 @@ public class EwmStatsServiceImpl implements EwmStatsService {
                 LocalDateTime.now().plusYears(1000),
                 List.of(endPointPath + "/" + eventId),
                 false).get(0).getHits();
+    }
+
+    @Override
+    public Map<Long, Integer> getViewsForCollection(Collection<Long> eventIds) {
+        Collection<String> uris = eventIds.stream()
+                .map(id -> endPointPath + "/" + id)
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> map = new HashMap<>();
+        eventIds.forEach(id -> map.put(id, 0));
+
+        Collection<ViewStats> collection = client.getHits(
+                        LocalDateTime.now().minusYears(1000),
+                        LocalDateTime.now().plusYears(1000),
+                        uris,
+                        false);
+
+        for (ViewStats stats : collection) {
+            StringBuilder sb = new StringBuilder(stats.getUri());
+            map.put(Long.parseLong(sb.substring(sb.lastIndexOf("/") + 1)), stats.getHits());
+        }
+
+        return map;
     }
 }

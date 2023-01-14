@@ -50,10 +50,16 @@ public class StatsClient {
             Boolean unique) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(LocalDateTimeCompositeSerializer.DATE_TIME_FORMAT);
 
+        StringBuilder sb = new StringBuilder();
+        uris.forEach(uri -> sb.append(uri).append(","));
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+
         Map<String, String> parameters = Map.of(
                 "start", start.format(formatter),
                 "end", end.format(formatter),
-                "uris", uris.toString(),
+                "uris", sb.toString(),
                 "unique", unique.toString());
 
         ResponseEntity<List<ViewStats>> response = rest.exchange(

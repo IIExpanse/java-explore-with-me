@@ -21,7 +21,8 @@ import ru.yandex.practicum.ewm.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -118,6 +119,17 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    public Map<Long, Integer> getConfirmedRequestsForCollection(Collection<Long> ids) {
+        Map<Long, Integer> map = new HashMap<>();
+        ids.forEach(id -> map.put(id, 0));
+
+        requestRepository.getAllEventIdsFromConfirmedRequests(ids, RequestStatus.CONFIRMED)
+                .forEach(id -> map.put(id, map.get(id) + 1));
+
+        return map;
+    }
+
+    @Override
     @Transactional
     public ParticipationRequestDto cancelRequest(long userId, long requestId) {
         String context = "отмена запроса на участие в событии";
@@ -194,36 +206,17 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private ParticipationRequest getRequestModel(long requestId, String context) {
-        Optional<ParticipationRequest> requestOptional = requestRepository.findById(requestId);
-
-        if (requestOptional.isEmpty()) {
-            throw new RequestNotFoundException(
-                    String.format("Ошибка при операции '%s': запрос с id=%d не найден.", context, requestId));
-        }
-        return requestOptional.get();
+        return requestRepository.findById(requestId).orElseThrow(() -> new RequestNotFoundException(
+                String.format("Ошибка при операции '%s': запрос с id=%d не найден.", context, requestId)));
     }
 
     private User getUserOrThrow(long userId, String context) {
-        Optional<User> userOptional = userRepository.findById(userId);
-
-        if (userOptional.isEmpty()) {
-            throw new UserNotFoundException(
-                    String.format("Ошибка при операции '%s': пользователь с id=%d не найден.",
-                            context,
-                            userId));
-        }
-        return userOptional.get();
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(
+                String.format("Ошибка при операции '%s': пользователь с id=%d не найден.", context, userId)));
     }
 
     private Event getEventOrThrow(long eventId, String context) {
-        Optional<Event> eventOptional = eventRepository.findById(eventId);
-
-        if (eventOptional.isEmpty()) {
-            throw new EventNotFoundException(
-                    String.format("Ошибка при операции '%s': событие с id=%d не найдено.",
-                            context,
-                            eventId));
-        }
-        return eventOptional.get();
+        return eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(
+                String.format("Ошибка при операции '%s': событие с id=%d не найдено.", context, eventId)));
     }
 }

@@ -11,7 +11,7 @@ import ru.yandex.practicum.ewm.compilation.model.Compilation;
 import java.util.Collection;
 
 @Repository
-public interface CompilationRepository extends JpaRepository<Compilation, Long> {
+public interface CompilationRepository extends JpaRepository<Compilation, Long>, CompilationRepositoryCustom {
 
     @Query("SELECT c FROM Compilation c " +
             "WHERE (?1 IS NULL OR c.pinned = ?1)")

@@ -40,6 +40,11 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public CompilationDto getCompilation(long compId) {
         Compilation compilation = getModel(compId);
+        Collection<Long> eventIds = compilation.getEvents().stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
+        Map<Long, Integer> confirmedRequestsMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
 
         log.trace("Запрошена подборка с id={}", compId);
         return compilationMapper.mapToDto(
@@ -47,23 +52,35 @@ public class CompilationServiceImpl implements CompilationService {
                 compilation.getEvents().stream()
                         .map(event -> eventMapper.mapToShortDto(
                                 event,
-                                requestService.getConfirmedRequestsCount(event.getId()),
-                                statsService.getViewsForEvent(event.getId())))
+                                confirmedRequestsMap.get(event.getId()),
+                                viewsCountMap.get(event.getId())))
                         .collect(Collectors.toSet()));
     }
 
     @Override
     public Collection<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
-        log.trace("Запрошен список подборок событий.");
-        return compilationRepository.getCompilations(pinned, Pageable.ofSize(size)).stream()
+        Collection<Compilation> compilations = compilationRepository.getCompilations(pinned, Pageable.ofSize(size))
+                .stream()
                 .skip(from)
+                .collect(Collectors.toSet());
+
+        Set<Event> events = new HashSet<>();
+        compilations.forEach(compilation -> events.addAll(compilation.getEvents()));
+
+        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+
+        Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
+
+        log.trace("Запрошен список подборок событий.");
+        return compilations.stream()
                 .map(compilation -> compilationMapper.mapToDto(
                         compilation,
                         compilation.getEvents().stream()
                                 .map(event -> eventMapper.mapToShortDto(
                                         event,
-                                        requestService.getConfirmedRequestsCount(event.getId()),
-                                        statsService.getViewsForEvent(event.getId())))
+                                        requestsCountMap.get(event.getId()),
+                                        viewsCountMap.get(event.getId())))
                                 .collect(Collectors.toSet())))
                 .collect(Collectors.toList());
     }
@@ -72,17 +89,24 @@ public class CompilationServiceImpl implements CompilationService {
     public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
         Set<Event> events = new HashSet<>(eventRepository.findAllById(newCompilationDto.getEvents()));
         Compilation compilation = compilationRepository.save(compilationMapper.mapToNewModel(newCompilationDto, events));
-        events.stream()
-                .map(Event::getId)
-                .forEach(id -> compilationRepository.addEventIntoCompilation(id, compilation.getId()));
+        compilationRepository.addEventsIntoCompilation(
+                events.stream()
+                        .map(Event::getId)
+                        .collect(Collectors.toList()),
+                compilation.getId());
+
+        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+
+        Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
 
 
         log.debug("Добавлена новая подборка: {}", compilation);
         return compilationMapper.mapToDto(compilation, compilation.getEvents().stream()
                 .map(event -> eventMapper.mapToShortDto(
                         event,
-                        requestService.getConfirmedRequestsCount(event.getId()),
-                        statsService.getViewsForEvent(event.getId())))
+                        requestsCountMap.get(event.getId()),
+                        viewsCountMap.get(event.getId())))
                 .collect(Collectors.toSet()));
     }
 
@@ -142,13 +166,8 @@ public class CompilationServiceImpl implements CompilationService {
     }
 
     private Compilation getModel(long compId) {
-        Optional<Compilation> compilationOptional = compilationRepository.findById(compId);
-
-        if (compilationOptional.isEmpty()) {
-            throw new CompilationNotFoundException(String.format("Ошибка при получении компиляции с id=%d: " +
-                    "компиляция не найдена.", compId));
-        }
-
-        return compilationOptional.get();
+        return compilationRepository.findById(compId).orElseThrow(() ->
+                new CompilationNotFoundException(String.format("Ошибка при получении компиляции с id=%d: " +
+                        "компиляция не найдена.", compId)));
     }
 }

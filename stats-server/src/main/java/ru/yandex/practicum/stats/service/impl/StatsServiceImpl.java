@@ -44,7 +44,6 @@ public class StatsServiceImpl implements StatsService {
         uris = uris.stream()
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
-        uris.forEach(uri -> hitsMap.put(uri, 0));
 
         if (unique) {
             Collection<EndpointHit> hits = repository.getAllHits(start, end, uris);
@@ -56,12 +55,13 @@ public class StatsServiceImpl implements StatsService {
                 String uri = hit.getUri();
 
                 if (uniqueIpsPerUriMap.get(uri).add(hit.getIp())) {
-                    hitsMap.put(uri, hitsMap.get(uri) + 1);
+                    hitsMap.compute(uri, (s, integer) -> integer == null ? 1 : integer + 1);
                 }
             }
 
         } else {
-            repository.getAllUris(start, end, uris).forEach(uri -> hitsMap.put(uri, hitsMap.get(uri) + 1));
+            repository.getAllUris(start, end, uris).forEach(
+                    uri -> hitsMap.compute(uri, (s, integer) -> integer == null ? 1 : integer + 1));
         }
 
         log.trace("Запрошена статистика посещений по {} адресам", uris.size());

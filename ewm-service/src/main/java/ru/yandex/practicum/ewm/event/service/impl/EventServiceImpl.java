@@ -114,8 +114,8 @@ public class EventServiceImpl implements EventService {
                 .skip(from)
                 .map(event -> mapper.mapToShortDto(
                         event,
-                        requestsCountMap.get(event.getId()),
-                        viewsCountMap.get(event.getId())))
+                        requestsCountMap.getOrDefault(event.getId(), 0),
+                        viewsCountMap.getOrDefault(event.getId(), 0)))
                 .collect(Collectors.toList());
     }
 
@@ -148,8 +148,8 @@ public class EventServiceImpl implements EventService {
         Stream<EventShortDto> shortDtoStream = events.stream()
                 .map(event -> mapper.mapToShortDto(
                         event,
-                        requestsCountMap.get(event.getId()),
-                        viewsCountMap.get(event.getId())));
+                        requestsCountMap.getOrDefault(event.getId(), 0),
+                        viewsCountMap.getOrDefault(event.getId(), 0)));
 
         Collection<EventShortDto> shortDtos;
 
@@ -192,8 +192,8 @@ public class EventServiceImpl implements EventService {
         return events.stream()
                 .map(event -> mapper.mapToFullDto(
                         event,
-                        requestsCountMap.get(event.getId()),
-                        viewsCountMap.get(event.getId()),
+                        requestsCountMap.getOrDefault(event.getId(), 0),
+                        viewsCountMap.getOrDefault(event.getId(), 0),
                         new LocationDto(event.getLat(), event.getLon())))
                 .collect(Collectors.toList());
     }

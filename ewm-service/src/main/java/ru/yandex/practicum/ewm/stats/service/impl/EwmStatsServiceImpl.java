@@ -54,6 +54,7 @@ public class EwmStatsServiceImpl implements EwmStatsService {
                 .collect(Collectors.toList());
 
         Map<Long, Integer> map = new HashMap<>();
+        eventIds.forEach(id -> map.put(id, 0));
 
         Collection<ViewStats> collection = client.getHits(
                         LocalDateTime.now().minusYears(1000),

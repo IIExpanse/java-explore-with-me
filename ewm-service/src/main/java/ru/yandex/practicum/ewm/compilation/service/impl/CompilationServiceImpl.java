@@ -52,8 +52,8 @@ public class CompilationServiceImpl implements CompilationService {
                 compilation.getEvents().stream()
                         .map(event -> eventMapper.mapToShortDto(
                                 event,
-                                confirmedRequestsMap.getOrDefault(event.getId(), 0),
-                                viewsCountMap.getOrDefault(event.getId(), 0)))
+                                confirmedRequestsMap.get(event.getId()),
+                                viewsCountMap.get(event.getId())))
                         .collect(Collectors.toSet()));
     }
 
@@ -79,8 +79,8 @@ public class CompilationServiceImpl implements CompilationService {
                         compilation.getEvents().stream()
                                 .map(event -> eventMapper.mapToShortDto(
                                         event,
-                                        requestsCountMap.getOrDefault(event.getId(), 0),
-                                        viewsCountMap.getOrDefault(event.getId(), 0)))
+                                        requestsCountMap.get(event.getId()),
+                                        viewsCountMap.get(event.getId())))
                                 .collect(Collectors.toSet())))
                 .collect(Collectors.toList());
     }
@@ -105,8 +105,8 @@ public class CompilationServiceImpl implements CompilationService {
         return compilationMapper.mapToDto(compilation, compilation.getEvents().stream()
                 .map(event -> eventMapper.mapToShortDto(
                         event,
-                        requestsCountMap.getOrDefault(event.getId(), 0),
-                        viewsCountMap.getOrDefault(event.getId(), 0)))
+                        requestsCountMap.get(event.getId()),
+                        viewsCountMap.get(event.getId())))
                 .collect(Collectors.toSet()));
     }
 

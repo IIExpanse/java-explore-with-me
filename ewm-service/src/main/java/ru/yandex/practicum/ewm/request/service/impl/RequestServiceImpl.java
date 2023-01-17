@@ -124,7 +124,7 @@ public class RequestServiceImpl implements RequestService {
         ids.forEach(id -> map.put(id, 0));
 
         requestRepository.getAllEventIdsFromConfirmedRequests(ids, RequestStatus.CONFIRMED)
-                .forEach(id -> map.compute(id, (aLong, integer) -> (integer == null) ? 1 : integer + 1));
+                .forEach(id -> map.put(id, map.get(id) + 1));
 
         return map;
     }

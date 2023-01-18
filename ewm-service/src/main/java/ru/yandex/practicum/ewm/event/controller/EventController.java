@@ -101,6 +101,14 @@ public class EventController {
         );
     }
 
+    @GetMapping(path = "/admin/vents/pending")
+    public Collection<EventFullDto> getAllPendingEvents(
+            @RequestParam(defaultValue = "0") Integer from,
+            @RequestParam(defaultValue = "10") Integer size
+    ) {
+        return service.getAllEventsToReview(from, size);
+    }
+
     @PatchMapping(path = "/users/{userId}/events")
     public EventFullDto updateEvent(
             @RequestBody @Valid UpdateEventRequest request,

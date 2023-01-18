@@ -199,6 +199,32 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public Collection<EventFullDto> getAllEventsToReview(int from, int size) {
+        Collection<Event> events = eventRepository.findAllByStateOrState(
+                        EventState.PENDING,
+                        EventState.REVIEWED,
+                        Pageable.ofSize(size))
+                .stream()
+                .skip(from)
+                .collect(Collectors.toSet());
+
+        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+
+        Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
+        Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
+
+        log.trace("Запрошены все ожидающие модерации события.");
+        return events.stream()
+                .skip(from)
+                .map(event -> mapper.mapToFullDto(
+                        event,
+                        requestsCountMap.get(event.getId()),
+                        viewsCountMap.get(event.getId()),
+                        new LocationDto(event.getLat(), event.getLon())))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
     public EventFullDto updateEvent(UpdateEventRequest request, long userId) {
         getUserOrThrow(userId, "обновление события");
         Event event = getEventModel(request.getEventId());
@@ -214,7 +240,7 @@ public class EventServiceImpl implements EventService {
             throw new CantEditPublishedEventException(String.format("Ошибка при обновлении события с id=%d: " +
                     "нельзя отредактировать опубликованное событие.", eventId));
 
-        } else if (state == EventState.CANCELED) {
+        } else if (state == EventState.CANCELED || state == EventState.REVIEWED) {
             event.setState(EventState.PENDING);
         }
 

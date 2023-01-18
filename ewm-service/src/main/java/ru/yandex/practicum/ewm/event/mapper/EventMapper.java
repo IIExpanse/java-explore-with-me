@@ -25,6 +25,7 @@ public interface EventMapper {
     @Mapping(target = "compilations", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "initiator", source = "initiator")
+    @Mapping(target = "reviews", ignore = true)
     Event mapToNewModel(
             NewEventDto eventDto,
             Category category,
@@ -47,6 +48,7 @@ public interface EventMapper {
     @Mapping(target = "createdOn", ignore = true)
     @Mapping(target = "compilations", ignore = true)
     @Mapping(target = "category", source = "category")
+    @Mapping(target = "reviews", ignore = true)
     Event updateEvent(@MappingTarget Event event, UpdateEventRequest request, Category category);
 
     @Mapping(target = "state", ignore = true)
@@ -60,5 +62,6 @@ public interface EventMapper {
     @Mapping(target = "lon", source = "request.location.lon")
     @Mapping(target = "lat", source = "request.location.lat")
     @Mapping(target = "category", source = "category")
+    @Mapping(target = "reviews", ignore = true)
     Event updateEventAdmin(@MappingTarget Event event, AdminUpdateEventRequest request, Category category);
 }

@@ -1,9 +1,8 @@
-package ru.yandex.practicum.ewm.request.model;
+package ru.yandex.practicum.ewm.review.model;
 
 import lombok.*;
 import org.hibernate.Hibernate;
 import ru.yandex.practicum.ewm.event.model.Event;
-import ru.yandex.practicum.ewm.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -16,30 +15,29 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "participation_requests")
-public class ParticipationRequest {
+@Table(name = "moderator_reviews")
+public class Review {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "request_id")
+    @Column(name = "review_id")
     private Long id;
-    @Column(name = "created")
+    @Column(name = "reviewer_name")
+    private String reviewerName;
+    @Column(name = "text")
+    private String text;
+    @Column(name = "created_on")
     private LocalDateTime created;
     @ManyToOne
-    @JoinColumn(name = "event", referencedColumnName = "event_id")
+    @JoinColumn(name = "reviewed_event", referencedColumnName = "event_id")
     private Event event;
-    @ManyToOne
-    @JoinColumn(name = "requester", referencedColumnName = "user_id")
-    private User requester;
-    @Column(name = "status")
-    @Enumerated(EnumType.STRING)
-    private RequestStatus status;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        ParticipationRequest request = (ParticipationRequest) o;
-        return id != null && Objects.equals(id, request.id);
+        Review review = (Review) o;
+        return id != null && Objects.equals(id, review.id);
     }
 
     @Override

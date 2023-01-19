@@ -15,6 +15,8 @@ import ru.yandex.practicum.ewm.compilation.exception.CompilationNotFoundExceptio
 import ru.yandex.practicum.ewm.compilation.exception.PinnedAlreadySetException;
 import ru.yandex.practicum.ewm.event.exception.*;
 import ru.yandex.practicum.ewm.request.exception.*;
+import ru.yandex.practicum.ewm.review.exception.CanOnlyReviewPendingEventsException;
+import ru.yandex.practicum.ewm.review.exception.WrongUserRequestingEventReviewsException;
 import ru.yandex.practicum.ewm.user.exception.DuplicateEmailException;
 import ru.yandex.practicum.ewm.user.exception.UserNotFoundException;
 
@@ -70,7 +72,8 @@ public class GlobalExceptionHandler {
             WrongUserUpdatingEventException.class,
             WrongUserQueryingEventRequestsException.class,
             WrongUserUpdatingRequestException.class,
-            WrongUserRequestingOwnerEventException.class
+            WrongUserRequestingOwnerEventException.class,
+            WrongUserRequestingEventReviewsException.class
     })
     ResponseEntity<ApiError> handleForbiddenExceptions(final Exception e) {
         String exceptionName = e.getClass().getName();
@@ -118,7 +121,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             DuplicateEmailException.class,
             CantDeleteUsedCategoryException.class,
-            CategoryNameAlreadyExistsException.class
+            CategoryNameAlreadyExistsException.class,
+            CanOnlyReviewPendingEventsException.class
     })
     ResponseEntity<ApiError> handleConflictExceptions(final Exception e) {
         String exceptionName = e.getClass().getName();

@@ -43,6 +43,8 @@ public interface EventService {
             int size
     );
 
+    Collection<EventFullDto> getAllEventsToReview(int from, int size);
+
     EventFullDto updateEvent(UpdateEventRequest request, long userId);
 
     EventFullDto updateEventAdmin(AdminUpdateEventRequest request, long eventId);

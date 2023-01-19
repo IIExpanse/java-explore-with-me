@@ -1,13 +1,16 @@
 package ru.yandex.practicum.ewm.event.model;
 
 import lombok.*;
+import org.hibernate.Hibernate;
 import ru.yandex.practicum.ewm.category.model.Category;
 import ru.yandex.practicum.ewm.compilation.model.Compilation;
 import ru.yandex.practicum.ewm.request.model.ParticipationRequest;
+import ru.yandex.practicum.ewm.review.model.Review;
 import ru.yandex.practicum.ewm.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -64,4 +67,21 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "ref_compilation", referencedColumnName = "compilation_id"))
     @ToString.Exclude
     private Set<Compilation> compilations;
+
+    @OneToMany(mappedBy = "event")
+    @ToString.Exclude
+    private Set<Review> reviews;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Event event = (Event) o;
+        return id != null && Objects.equals(id, event.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

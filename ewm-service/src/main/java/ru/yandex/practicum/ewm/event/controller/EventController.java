@@ -101,7 +101,7 @@ public class EventController {
         );
     }
 
-    @GetMapping(path = "/admin/vents/pending")
+    @GetMapping(path = "/admin/events/pending")
     public Collection<EventFullDto> getAllPendingEvents(
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size

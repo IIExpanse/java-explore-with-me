@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
 
+    @Mapping(target = "id", ignore = true)
     Review mapToNewModel(NewReviewDto reviewDto, Event event, LocalDateTime created);
 
     @Mapping(target = "eventId", source = "review.event.id")

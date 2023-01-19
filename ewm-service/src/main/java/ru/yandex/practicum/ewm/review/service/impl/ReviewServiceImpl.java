@@ -55,10 +55,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Collection<ReviewDto> getEventReviewsByOwner(long userId, long eventId, int from, int size) {
-        Event event = eventRepository.findById(eventId).orElseThrow(() ->
-                new EventNotFoundException(
-                        String.format("Ошибка при добавлении комментария модератором для события с id=%d: " +
-                                "событие не найдено.", eventId)));
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(
+                String.format("Ошибка при добавлении комментария модератором для события с id=%d: " +
+                        "событие не найдено.", eventId)));
 
         if (event.getInitiator().getId() != userId) {
             throw new WrongUserRequestingEventReviewsException(

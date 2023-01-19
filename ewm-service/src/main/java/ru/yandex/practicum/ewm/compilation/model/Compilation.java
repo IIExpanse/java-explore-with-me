@@ -1,9 +1,11 @@
 package ru.yandex.practicum.ewm.compilation.model;
 
 import lombok.*;
+import org.hibernate.Hibernate;
 import ru.yandex.practicum.ewm.event.model.Event;
 
 import javax.persistence.*;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -27,4 +29,17 @@ public class Compilation {
     @ManyToMany(mappedBy = "compilations")
     @ToString.Exclude
     private Set<Event> events;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Compilation that = (Compilation) o;
+        return id != null && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

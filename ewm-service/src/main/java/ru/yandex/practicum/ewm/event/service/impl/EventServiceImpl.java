@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static ru.yandex.practicum.ewm.event.model.EventState.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -50,7 +52,7 @@ public class EventServiceImpl implements EventService {
                 getCategoryOrThrow(newEventDto.getCategory(), context),
                 getUserOrThrow(userId, "добавление события"),
                 LocalDateTime.now(),
-                EventState.PENDING);
+                PENDING);
 
         if (event.getParticipantLimit() == null) {
             event.setParticipantLimit(0);
@@ -104,7 +106,9 @@ public class EventServiceImpl implements EventService {
         Collection<Event> events = eventRepository.findAllByInitiatorId(userId, Pageable.ofSize(size)).stream()
                 .skip(from)
                 .collect(Collectors.toSet());
-        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+        Collection<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
 
         Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
         Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
@@ -140,7 +144,9 @@ public class EventServiceImpl implements EventService {
                 rangeEnd,
                 onlyAvailable,
                 size);
-        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+        Collection<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
 
         Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
         Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
@@ -183,7 +189,9 @@ public class EventServiceImpl implements EventService {
                 .skip(from)
                 .collect(Collectors.toSet());
 
-        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+        Collection<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
 
         Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
         Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
@@ -201,14 +209,16 @@ public class EventServiceImpl implements EventService {
     @Override
     public Collection<EventFullDto> getAllEventsToReview(int from, int size) {
         Collection<Event> events = eventRepository.findAllByStateOrState(
-                        EventState.PENDING,
-                        EventState.REVIEWED,
+                        PENDING,
+                        REVIEWED,
                         Pageable.ofSize(size))
                 .stream()
                 .skip(from)
                 .collect(Collectors.toSet());
 
-        Collection<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toSet());
+        Collection<Long> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toSet());
 
         Map<Long, Integer> requestsCountMap = requestService.getConfirmedRequestsForCollection(eventIds);
         Map<Long, Integer> viewsCountMap = statsService.getViewsForCollection(eventIds);
@@ -236,12 +246,12 @@ public class EventServiceImpl implements EventService {
             throw new WrongUserUpdatingEventException(String.format("Ошибка при обновлении события с id=%d: " +
                     "запрос исходит от пользователя, не являющегося владельцем", eventId));
 
-        } else if (state == EventState.PUBLISHED) {
+        } else if (state == PUBLISHED) {
             throw new CantEditPublishedEventException(String.format("Ошибка при обновлении события с id=%d: " +
                     "нельзя отредактировать опубликованное событие.", eventId));
 
-        } else if (state == EventState.CANCELED || state == EventState.REVIEWED) {
-            event.setState(EventState.PENDING);
+        } else if (state == CANCELED || state == REVIEWED) {
+            event.setState(PENDING);
         }
 
         if (request.getCategory() == null) {
@@ -290,11 +300,11 @@ public class EventServiceImpl implements EventService {
             throw new WrongUserUpdatingEventException(String.format("Ошибка при отмене события с id=%d: " +
                     "запрос исходит от пользователя, не являющегося владельцем.", eventId));
 
-        } else if (event.getState() != EventState.PENDING) {
+        } else if (event.getState() != PENDING) {
             throw new CanOnlyCancelPendingEventException(String.format("Ошибка при отмене события с id=%d: " +
                     "можно отменить только событие в состоянии ожидания модерации.", eventId));
         }
-        event.setState(EventState.CANCELED);
+        event.setState(CANCELED);
 
         log.debug("Отменено событие с id={}", eventId);
         return mapper.mapToFullDto(eventRepository.save(event),
@@ -311,11 +321,11 @@ public class EventServiceImpl implements EventService {
             throw new EventStartIsTooCloseException(String.format("Ошибка при публикации события с id=%d: " +
                     "время начала события должно быть не раньше, чем через час от текущего момента.", eventId));
 
-        } else if (event.getState() != EventState.PENDING) {
+        } else if (event.getState() != PENDING) {
             throw new CanOnlyPublishPendingEventsException(String.format("Ошибка при публикации события с id=%d: " +
                     "можно опубликовать только события, ожидающие публикации.", eventId));
         }
-        event.setState(EventState.PUBLISHED);
+        event.setState(PUBLISHED);
         event.setPublishedOn(LocalDateTime.now());
 
         return mapper.mapToFullDto(event,
@@ -328,11 +338,11 @@ public class EventServiceImpl implements EventService {
     public EventFullDto rejectEvent(long eventId) {
         Event event = getEventModel(eventId);
 
-        if (event.getState() == EventState.PUBLISHED) {
+        if (event.getState() == PUBLISHED) {
             throw new CantRejectPublishedEventException(String.format("Ошибка при отклонении события с id=%d: " +
                     "нельзя отклонить опубликованное событие.", eventId));
         }
-        event.setState(EventState.CANCELED);
+        event.setState(CANCELED);
 
         return mapper.mapToFullDto(event,
                 requestService.getConfirmedRequestsCount(eventId),
